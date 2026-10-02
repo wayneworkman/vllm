@@ -96,6 +96,7 @@ TokenizerMode = Literal[
     "inkling",
     "kimi_k3",
     "cohere",
+    "peacebell",
 ]
 ModelDType = Literal["auto", "half", "float16", "bfloat16", "float", "float32"]
 LogprobsMode = Literal[
@@ -714,6 +715,8 @@ class ModelConfig:
                 self.tokenizer_mode = "deepseek_v41"
             elif arch in ("InklingForCausalLM", "InklingForConditionalGeneration"):
                 self.tokenizer_mode = "inkling"
+            elif arch in ("GPTForCausalLM", "PeacebellForCausalLM"):
+                self.tokenizer_mode = "peacebell"
 
             if self.tokenizer_mode != "auto":
                 logger.info(

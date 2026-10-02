@@ -294,6 +294,12 @@ _TEXT_GENERATION_EXAMPLE_MODELS = {
     ),
     "Glm5NextForCausalLM": _HfExamplesInfo("zai-org/GLM-5.3-Flash"),
     "GPT2LMHeadModel": _HfExamplesInfo("openai-community/gpt2"),
+    "GPTForCausalLM": _HfExamplesInfo(
+        "wayneworkman2012/peacebell-v1-148M",
+        {"291m": "wayneworkman2012/peacebell-v1-291M"},
+        tokenizer_mode="peacebell",
+        trust_remote_code=True,
+    ),
     "GPTBigCodeForCausalLM": _HfExamplesInfo(
         "bigcode/starcoder",
         extras={
@@ -492,6 +498,12 @@ _TEXT_GENERATION_EXAMPLE_MODELS = {
     "Param2MoEForCausalLM": _HfExamplesInfo(
         "bharatgenai/Param2-17B-A2.4B-Thinking",
         trust_remote_code=True,
+    ),
+    "PeacebellForCausalLM": _HfExamplesInfo(
+        "wayneworkman2012/peacebell-v1-148M",
+        tokenizer_mode="peacebell",
+        trust_remote_code=True,
+        hf_overrides={"architectures": ["PeacebellForCausalLM"]},
     ),
     "PhiForCausalLM": _HfExamplesInfo("microsoft/phi-2"),
     "Phi3ForCausalLM": _HfExamplesInfo("microsoft/Phi-3-mini-4k-instruct"),

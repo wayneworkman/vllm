@@ -62,6 +62,10 @@ _VLLM_TOKENIZERS = {
     # mode exists to select the InklingRenderer, which renders chat to
     # token ids natively (Inkling has no Jinja chat template).
     "inkling": ("hf", "CachedHfTokenizer"),
+    # Peacebell uses the hub's SentencePiece HF tokenizer (trust_remote_code)
+    # for token operations; the "peacebell" mode selects the PeacebellRenderer,
+    # which renders ChatML to token ids natively (no Jinja chat template).
+    "peacebell": ("hf", "CachedHfTokenizer"),
 }
 
 

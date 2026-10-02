@@ -412,6 +412,7 @@ th {
 | `Glm4MoeLiteForCausalLM` | GLM-4.7-Flash | `zai-org/GLM-4.7-Flash`, etc. | ✅︎ | ✅︎ |
 | `GlmMoeDsaForCausalLM` | GLM-5, GLM-5.1, GLM-5.2 | `zai-org/GLM-5`, etc. | ✅︎ | ✅︎ |
 | `GPT2LMHeadModel` | GPT-2 | `openai-community/gpt2`, `openai-community/gpt2-xl`, etc. | | ✅︎ |
+| `GPTForCausalLM`, `PeacebellForCausalLM` | Peacebell | `wayneworkman2012/peacebell-v1-148M`, `wayneworkman2012/peacebell-v1-291M` | | ✅︎ |
 | `GPTJForCausalLM` | GPT-J | `EleutherAI/gpt-j-6b`, `nomic-ai/gpt4all-j`, etc. | | ✅︎ |
 | `GPTNeoXForCausalLM` | GPT-NeoX, Pythia, OpenAssistant, Dolly V2, StableLM | `EleutherAI/gpt-neox-20b`, `EleutherAI/pythia-12b`, `OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5`, `databricks/dolly-v2-12b`, `stabilityai/stablelm-tuned-alpha-7b`, etc. | | ✅︎ |
 | `GptOssForCausalLM` | GPT-OSS | `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | ✅︎ | ✅︎ |

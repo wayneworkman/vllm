@@ -30,6 +30,7 @@ _VLLM_RENDERERS = {
     "mistral": ("mistral", "MistralRenderer"),
     "terratorch": ("terratorch", "TerratorchRenderer"),
     "inkling": ("inkling", "InklingRenderer"),
+    "peacebell": ("peacebell", "PeacebellRenderer"),
 }
 
 

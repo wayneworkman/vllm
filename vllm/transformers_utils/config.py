@@ -156,6 +156,9 @@ _CONFIG_REGISTRY: dict[str, type[PretrainedConfig]] = LazyConfigDict(
     **{"deepseek_v41": "DeepseekV41Config"},
     inkling_mm_model="InklingMMConfig",
     inkling_model="InklingModelConfig",
+    # Peacebell (wayneworkman2012/peacebell-v1-*) ships its config as
+    # model_type "gpt" with trust_remote_code; this in-tree copy avoids that.
+    gpt="PeacebellConfig",
 )
 
 _SPECULATIVE_DECODING_CONFIGS: set[str] = {"eagle", "speculators", "medusa"}

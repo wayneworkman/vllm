@@ -78,6 +78,7 @@ _CLASS_TO_MODULE: dict[str, str] = {
     "KimiK3Config": "vllm.transformers_utils.configs.kimi_k3",
     "KimiK3VisionConfig": "vllm.transformers_utils.configs.kimi_k3",
     "NemotronConfig": "vllm.transformers_utils.configs.nemotron",
+    "PeacebellConfig": "vllm.transformers_utils.configs.peacebell",
     "NemotronHConfig": "vllm.transformers_utils.configs.nemotron_h",
     "OlmoHybridConfig": "vllm.transformers_utils.configs.olmo_hybrid",
     "OpenVLAConfig": "vllm.transformers_utils.configs.openvla",
@@ -198,6 +199,7 @@ __all__ = [
     "InklingAudioConfig",
     "InklingVisionConfig",
     "InklingMMConfig",
+    "PeacebellConfig",
 ]
 
 
