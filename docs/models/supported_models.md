@@ -418,7 +418,7 @@ th {
 | `Glm4MoeLiteForCausalLM` | GLM-4.7-Flash | `zai-org/GLM-4.7-Flash`, etc. | ✅︎ | ✅︎ |
 | `GlmMoeDsaForCausalLM` | GLM-5, GLM-5.1, GLM-5.2 | `zai-org/GLM-5`, etc. | ✅︎ | ✅︎ |
 | `GPT2LMHeadModel` | GPT-2 | `openai-community/gpt2`, `openai-community/gpt2-xl`, etc. | | ✅︎ |
-| `GPTForCausalLM`, `PeacebellForCausalLM` | Peacebell | `wayneworkman2012/peacebell-v1-148M`, `wayneworkman2012/peacebell-v1-291M` | | ✅︎ |
+| `GPTForCausalLM`, `PeacebellForCausalLM` | Peacebell, Boris2 | `wayneworkman2012/peacebell-v1-148M`, `wayneworkman2012/peacebell-v1-291M`, `wayneworkman2012/boris2-peacebell-base`, `wayneworkman2012/boris2-peacebell-think` | | ✅︎ |
 | `GPTJForCausalLM` | GPT-J | `EleutherAI/gpt-j-6b`, `nomic-ai/gpt4all-j`, etc. | | ✅︎ |
 | `GptOssForCausalLM` | GPT-OSS | `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | ✅︎ | ✅︎ |
 | `GraniteForCausalLM` | Granite 3.0, Granite 3.1, PowerLM | `ibm-granite/granite-3.0-2b-base`, `ibm-granite/granite-3.1-8b-instruct`, `ibm/PowerLM-3b`, etc. | ✅︎ | ✅︎ |

@@ -280,3 +280,30 @@ def test_extra_args_preserves_custom_objects_and_shared_containers():
     params = SamplingParams(extra_args=extra_args)
     assert params.extra_args["first"][0] is custom
     assert params.extra_args["first"] is params.extra_args["second"]
+
+
+def test_default_stop_is_added_to_the_request_stops():
+    """A model's own end-of-turn string applies on top of what the caller asked."""
+    params = SamplingParams(stop=["\n\n"])
+    params.add_default_stop(["<|im_end|>"])
+
+    assert params.stop == ["\n\n", "<|im_end|>"]
+    # The detokenizer holds back enough text to never emit a partial marker.
+    assert params.output_text_buffer_length == len("<|im_end|>") - 1
+
+
+def test_default_stop_already_requested_is_not_duplicated():
+    params = SamplingParams(stop="<|im_end|>")
+    params.add_default_stop(["<|im_end|>"])
+
+    assert params.stop == ["<|im_end|>"]
+
+
+@pytest.mark.parametrize("kwargs", [{"ignore_eos": True}, {"detokenize": False}])
+def test_default_stop_is_skipped_like_an_eos(kwargs: dict):
+    """`ignore_eos` disables it as it does EOS; without text there is no string."""
+    params = SamplingParams(**kwargs)
+    params.add_default_stop(["<|im_end|>"])
+
+    assert params.stop == []
+    assert params.output_text_buffer_length == 0

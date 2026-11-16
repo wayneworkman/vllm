@@ -104,6 +104,7 @@ TokenizerMode = Literal[
     "kimi_k3",
     "cohere",
     "peacebell",
+    "boris2",
 ]
 ModelDType = Literal["auto", "half", "float16", "bfloat16", "float", "float32"]
 LogprobsMode = Literal[
@@ -789,7 +790,10 @@ class ModelConfig:
             elif arch in ("InklingForCausalLM", "InklingForConditionalGeneration"):
                 self.tokenizer_mode = "inkling"
             elif arch in ("GPTForCausalLM", "PeacebellForCausalLM"):
-                self.tokenizer_mode = "peacebell"
+                # One architecture, two tokenizers: Peacebell's SentencePiece
+                # vocabulary has ChatML control tokens; Boris2's byte-level
+                # BPE writes ChatML as plain text.
+                self.tokenizer_mode = "boris2" if _is_boris2(hf_config) else "peacebell"
 
             if self.tokenizer_mode != "auto":
                 logger.info(
@@ -2462,6 +2466,14 @@ _FLOAT16_NOT_SUPPORTED_MODELS = {
 }
 
 
+def _is_boris2(config: PreTrainedConfig) -> bool:
+    """Boris2 rather than Peacebell: both are `model_type = "gpt"`, and only
+    Boris2's config names the id its training padded with."""
+    return (
+        config.model_type == "gpt" and getattr(config, "train_pad_id", None) is not None
+    )
+
+
 def _is_valid_dtype(model_type: str, dtype: torch.dtype):
     if model_type in _FLOAT16_NOT_SUPPORTED_MODELS and dtype == torch.float16:  # noqa: E501, SIM103
         return False
@@ -2539,6 +2551,10 @@ def _get_and_verify_dtype(
 
     if isinstance(dtype, str):
         dtype = dtype.lower()
+        if dtype == "auto" and config_dtype == torch.float32 and _is_boris2(config):
+            # Boris2 matches its reference in float32 only: the usual downcast
+            # to bfloat16 changes its greedy output.
+            dtype = "float32"
         if dtype == "auto":
             # Set default dtype from model config
             torch_dtype = _resolve_auto_dtype(

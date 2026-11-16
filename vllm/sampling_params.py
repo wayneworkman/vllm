@@ -806,6 +806,20 @@ class SamplingParams(
                     eos_ids.update(self.stop_token_ids)
                     self.stop_token_ids = list(eos_ids)
 
+    def add_default_stop(self, stop: list[str]) -> None:
+        """Add the stop strings that end a turn for the model itself.
+
+        They act like a generation-config EOS that is text instead of a token:
+        applied on top of the request's own `stop`, and skipped under
+        `ignore_eos`.
+        """
+        if not stop or self.ignore_eos or not self.detokenize:
+            return
+        assert isinstance(self.stop, list)
+        self.stop = list(dict.fromkeys([*self.stop, *stop]))
+        if not self.include_stop_str_in_output:
+            self.output_text_buffer_length = max(len(s) for s in self.stop) - 1
+
     def update_from_tokenizer(self, tokenizer: TokenizerLike) -> None:
         if not self.bad_words:
             return

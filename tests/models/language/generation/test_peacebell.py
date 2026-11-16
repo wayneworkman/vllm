@@ -116,8 +116,7 @@ def test_chat_matches_reference(
         model, CONVERSATIONS, max_tokens, num_logprobs
     )
 
-    # The weights are at most 1.2 GB; a small fraction keeps the test runnable
-    # on a shared GPU.
+    # The weights are at most 1.2 GB, so a small fraction of the GPU is enough.
     with vllm_runner(
         model,
         max_model_len=2048,

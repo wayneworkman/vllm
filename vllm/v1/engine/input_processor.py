@@ -485,6 +485,7 @@ class InputProcessor:
                 self.generation_config_fields,
                 self.renderer.get_eos_token_id(),
             )
+            sampling_params.add_default_stop(self.renderer.get_default_stop())
             if self.tokenizer is not None:
                 sampling_params.update_from_tokenizer(self.tokenizer)
             if sampling_params.trace_decode_token_ids:

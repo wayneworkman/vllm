@@ -2,12 +2,15 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 """Inference-only Peacebell model compatible with the HuggingFace weights.
 
-Peacebell (``wayneworkman2012/peacebell-v1-148M`` and ``-291M``) is a GPT-style
+Peacebell (`wayneworkman2012/peacebell-v1-148M` and `-291M`) is a GPT-style
 decoder trained from scratch: pre-norm RMSNorm, ReZero residual gates (one
 learned scalar per sublayer), NeoX-style rotary position embeddings, bias-free
 fused-QKV attention, an exact-GELU MLP and tied token / LM-head weights.
-Ported from the ``modeling_gpt.py`` shipped inside the checkpoint repos; the
+Ported from the `modeling_gpt.py` shipped inside the checkpoint repos; the
 submodule names match that checkpoint's state_dict keys 1:1.
+
+Boris2 (`wayneworkman2012/boris2-peacebell-base` and `-think`) is the same
+architecture trained with a different tokenizer, and loads through this class.
 """
 
 from collections.abc import Iterable
@@ -134,7 +137,7 @@ class PeacebellMLP(nn.Module):
             quant_config=quant_config,
             prefix=f"{prefix}.c_proj",
         )
-        # Exact (erf) GELU, as ``F.gelu`` in the reference implementation.
+        # Exact (erf) GELU, as `F.gelu` in the reference implementation.
         self.act = get_act_fn("gelu")
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -241,9 +244,26 @@ class PeacebellModel(nn.Module):
         return hidden_states
 
 
+def _suppress_token_ids(vllm_config: VllmConfig) -> list[int]:
+    """Ids whose logit is forced to -inf: the checkpoint has no trained row.
+
+    Boris2 padded training batches with an id that was never a prediction
+    target. The model names that id as `train_pad_id` in `config.json` and
+    under `suppress_tokens` in `generation_config.json`; both are honoured so
+    the mask survives a replaced generation config.
+    """
+    model_config = vllm_config.model_config
+    generation_config = model_config.try_get_generation_config()
+    token_ids = set(generation_config.get("suppress_tokens") or [])
+    train_pad_id = getattr(model_config.hf_config, "train_pad_id", None)
+    if train_pad_id is not None:
+        token_ids.add(train_pad_id)
+    return sorted(token_ids)
+
+
 class PeacebellForCausalLM(nn.Module, SupportsPP):
-    # The checkpoint stores the decoder at the top level (``wte``, ``h.<i>``,
-    # ``ln_f``); vLLM keeps it under ``model`` like every other decoder here.
+    # The checkpoint stores the decoder at the top level (`wte`, `h.<i>`,
+    # `ln_f`); vLLM keeps it under `model` like every other decoder here.
     hf_to_vllm_mapper = WeightsMapper(
         orig_to_new_prefix={
             "wte.": "model.wte.",
@@ -270,6 +290,7 @@ class PeacebellForCausalLM(nn.Module, SupportsPP):
         if config.tie_word_embeddings:
             self.lm_head = self.lm_head.tie_weights(self.model.wte)
         self.logits_processor = LogitsProcessor(config.vocab_size)
+        self.suppress_token_ids = _suppress_token_ids(vllm_config)
         self.make_empty_intermediate_tensors = (
             self.model.make_empty_intermediate_tensors
         )
@@ -287,10 +308,14 @@ class PeacebellForCausalLM(nn.Module, SupportsPP):
         return self.model(input_ids, positions, intermediate_tensors, inputs_embeds)
 
     def compute_logits(self, hidden_states: torch.Tensor) -> torch.Tensor | None:
-        return self.logits_processor(self.lm_head, hidden_states)
+        logits = self.logits_processor(self.lm_head, hidden_states)
+        if logits is not None:
+            for token_id in self.suppress_token_ids:
+                logits[..., token_id] = -torch.inf
+        return logits
 
     def load_weights(self, weights: Iterable[tuple[str, torch.Tensor]]) -> set[str]:
-        # ``lm_head.weight`` is tied to ``wte.weight`` and absent from the
+        # `lm_head.weight` is tied to `wte.weight` and absent from the
         # checkpoint; the loader treats a tied alias as already loaded.
         loader = AutoWeightsLoader(self)
         return loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)

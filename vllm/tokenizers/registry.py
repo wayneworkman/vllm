@@ -65,6 +65,10 @@ _VLLM_TOKENIZERS = {
     # for token operations; the "peacebell" mode selects the PeacebellRenderer,
     # which renders ChatML to token ids natively (no Jinja chat template).
     "peacebell": ("hf", "CachedHfTokenizer"),
+    # Boris2 uses the plain HF fast tokenizer and its Jinja chat template; the
+    # "boris2" mode selects the Boris2Renderer, which adds the plain-text
+    # <|im_end|> stop string that ends a chat reply.
+    "boris2": ("hf", "CachedHfTokenizer"),
 }
 
 

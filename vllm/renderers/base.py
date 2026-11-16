@@ -450,6 +450,13 @@ class BaseRenderer(ABC, Generic[_T]):
 
         return self.tokenizer.eos_token_id
 
+    def get_default_stop(self) -> list[str]:
+        """Stop strings the engine adds to every request, on top of its own.
+
+        For models whose end-of-turn marker is plain text rather than a token.
+        """
+        return []
+
     def validate_token_ids(
         self, token_ids: Sequence[int], *, parameter: str | None = None
     ) -> None:
