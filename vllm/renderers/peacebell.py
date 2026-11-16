@@ -3,19 +3,19 @@
 """Native Peacebell chat renderer.
 
 Peacebell ships no Jinja chat template: its training-time ChatML encoding
-cannot be reproduced from text (see ``peacebell_encoding.py``), so chat
+cannot be reproduced from text (see `peacebell_encoding.py`), so chat
 messages are rendered directly to token ids, the way the Inkling renderer
 does for that model.
 """
 
 from vllm.config import VllmConfig
-from vllm.entrypoints.chat_utils import (
+from vllm.logger import init_logger
+from vllm.renderers.chat_utils import (
     ChatCompletionMessageParam,
     ConversationMessage,
     parse_chat_messages,
     parse_chat_messages_async,
 )
-from vllm.logger import init_logger
 from vllm.tokenizers.hf import HfTokenizer
 from vllm.utils.async_utils import make_async
 
@@ -31,11 +31,11 @@ logger = init_logger(__name__)
 class _HfBackedPeacebellTokenizer:
     """Adapts the hub's HF tokenizer to the encoding core's protocol.
 
-    The hub tokenizer (``tokenization_gpt.GPTTokenizer``) wraps a
-    ``sentencepiece.SentencePieceProcessor`` as ``.sp``. Text is encoded with
+    The hub tokenizer (`tokenization_gpt.GPTTokenizer`) wraps a
+    `sentencepiece.SentencePieceProcessor` as `.sp`. Text is encoded with
     that processor directly when it is exposed, because that is exactly what
-    training did; the HF ``encode`` path differs only for text containing the
-    literal ``<s>`` / ``</s>`` strings, which HF splits as added tokens.
+    training did; the HF `encode` path differs only for text containing the
+    literal `<s>` / `</s>` strings, which HF splits as added tokens.
     """
 
     def __init__(self, tokenizer: HfTokenizer) -> None:

@@ -26,7 +26,7 @@ from typing import Any
 
 import torch
 from torch import nn
-from transformers import PretrainedConfig
+from transformers import PreTrainedConfig
 
 from vllm.compilation.decorators import support_torch_compile
 from vllm.config import CacheConfig, ParallelConfig, VllmConfig
@@ -134,7 +134,7 @@ class OpenPanguMLP(nn.Module):
 class OpenPanguMoE(nn.Module):
     def __init__(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         parallel_config: ParallelConfig,
         quant_config: QuantizationConfig | None = None,
         prefix: str = "",
@@ -206,6 +206,7 @@ class OpenPanguMoE(nn.Module):
             scoring_func="sigmoid",
             routed_scaling_factor=self.routed_scaling_factor,
             apply_routed_scale_to_output=True,
+            divide_shared_output_in_fp16=True,
             e_score_correction_bias=self.gate.e_score_correction_bias,
             enable_eplb=self.enable_eplb,
             num_redundant_experts=self.n_redundant_experts,
@@ -240,7 +241,7 @@ class OpenPanguMoE(nn.Module):
 class OpenPanguMLAAttention(nn.Module):
     def __init__(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         hidden_size: int,
         num_heads: int,
         qk_nope_head_dim: int,
@@ -389,7 +390,7 @@ class OpenPanguMLAAttention(nn.Module):
 class OpenPanguEmbeddedAttention(nn.Module):
     def __init__(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         hidden_size: int,
         num_heads: int,
         num_kv_heads: int,
@@ -501,7 +502,7 @@ class OpenPanguEmbeddedAttention(nn.Module):
 
     def _init_rotary_emb(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         quant_config: QuantizationConfig | None,
     ) -> None:
         is_neox_style = True
@@ -522,7 +523,7 @@ class OpenPanguEmbeddedAttention(nn.Module):
 class OpenPanguSinkAttention(nn.Module):
     def __init__(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         hidden_size: int,
         num_heads: int,
         num_kv_heads: int,
@@ -743,7 +744,7 @@ class OpenPanguSinkAttention(nn.Module):
 
     def _init_rotary_emb(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         rope_parameters: dict[str, Any] | None,
         quant_config: QuantizationConfig | None,
     ) -> None:
@@ -769,7 +770,7 @@ class OpenPanguSinkAttention(nn.Module):
 class OpenPanguDecoderLayer(nn.Module):
     def __init__(
         self,
-        config: PretrainedConfig,
+        config: PreTrainedConfig,
         prefix: str,
         vllm_config: VllmConfig,
     ) -> None:
@@ -1091,7 +1092,7 @@ class OpenPanguModel(nn.Module):
         return loaded
 
     def post_weight_load(self) -> None:
-        for name, module in self.named_modules():
+        for _, module in self.named_modules():
             if module is self:
                 continue
             if hasattr(module, "post_weight_load"):

@@ -71,8 +71,7 @@ thought.
 
 Serve the model with a canvas that holds the answer template, for example:
   vllm serve google/diffusiongemma-26B-A4B-it \
-      --diffusion-config '{"canvas_length": 64}' --max-logprobs 32 \
-      --enable-prefix-caching
+      --diffusion-config '{"canvas_length": 64}' --enable-prefix-caching
 then run this in front of it:
   python structured_server.py --upstream http://127.0.0.1:8000 \
       --tokenizer google/diffusiongemma-26B-A4B-it --canvas 64 --port 8011
@@ -274,8 +273,10 @@ FORMATS = {
     "indexed": (
         " ",
         "{id}",
-        "Reply on one line with each question's id immediately followed by its "
-        "label, separated by single spaces.",
+        (
+            "Reply on one line with each question's id immediately followed by its "
+            "label, separated by single spaces."
+        ),
     ),
 }
 
@@ -331,9 +332,9 @@ def init_tokenizer(tok):
 def resolve_template(qs, head, lead, fmt):
     """Tokenize the answer template and find each question's slot. Every label
     must change exactly one token, at the same position for all of a question's
-    labels, or this raises SchemaError. ``head`` is the token run the canvas
+    labels, or this raises SchemaError. `head` is the token run the canvas
     starts with: the empty thought block for a plain read, and empty when the
-    prompt already ends the thought channel. ``lead`` is the text before the
+    prompt already ends the thought channel. `lead` is the text before the
     first answer: the join when earlier answers are in the prompt, so the
     tokens match one joint template."""
     base_labels = [0] * len(qs)
@@ -399,6 +400,14 @@ def canvas_width(template):
     return min(CANVAS_LEN, -(-need // CANVAS_STEP) * CANVAS_STEP)
 
 
+def constrained_xargs():
+    """Read over the labels only. The engine runs the unembedding, sampler and
+    self-conditioning over the request's logprob_token_ids instead of the whole
+    vocabulary. Same argmax, about a quarter less GPU time per read. Logprobs
+    come back normalized over the labels."""
+    return {"diffusion_constrained": True} if ARGS.constrained else {}
+
+
 def pin_xargs(template, slots, steps):
     """Past one denoise step the template must be held, or accept/renoise
     rewrites it: pin every canvas position that is not an answer slot."""
@@ -444,7 +453,7 @@ def upstream_completions(body, timeout=600):
 
 def chat_prompt_ids(sys_text, state_text, thinking=False):
     """The prompt the chat endpoint would build, as token ids, ending after
-    the model turn marker. Text states only. ``thinking`` turns the chat
+    the model turn marker. Text states only. `thinking` turns the chat
     template's thinking marker on."""
     messages = [
         {"role": "system", "content": sys_text},
@@ -461,7 +470,7 @@ def chat_prompt_ids(sys_text, state_text, thinking=False):
 
 def think(sys_text, state_text, budget):
     """A read prefix that ends with a thought the model wrote: the chat prompt
-    with thinking on, the open tag, up to ``budget`` generated tokens, the
+    with thinking on, the open tag, up to `budget` generated tokens, the
     close tag. Returns the prefix and a diagnostics dict for the thought."""
     prompt = chat_prompt_ids(sys_text, state_text, thinking=True) + THOUGHT_OPEN
     started = time.time()
@@ -490,7 +499,7 @@ def think(sys_text, state_text, budget):
 
 def think_chat(sys_text, state_content, budget):
     """A thought written with the image in view: the chat endpoint with
-    thinking on, capped at ``budget`` tokens and cut at the close tag.
+    thinking on, capped at `budget` tokens and cut at the close tag.
     Returns the thought's token ids and a diagnostics dict."""
     body = {
         "model": ARGS.model,
@@ -552,12 +561,13 @@ def one_read(
             "diffusion_max_steps": schema["steps"],
             "diffusion_read_only": True,
             **pin_xargs(template, slots, schema["steps"]),
+            **constrained_xargs(),
         },
     }
     d = upstream_chat(body)
     content = d["choices"][0]["logprobs"]["content"]
     out = []
-    for q, s in zip(schema["questions"], slots):
+    for _, s in zip(schema["questions"], slots):
         top = {
             int(t["token"].split(":")[1]): t["logprob"]
             for t in content[s["pos"]]["top_logprobs"]
@@ -601,12 +611,13 @@ def one_read_continuation(schema, template, slots, prompt_ids, seed):
             "diffusion_max_steps": schema["steps"],
             "diffusion_read_only": True,
             **pin_xargs(template, slots, schema["steps"]),
+            **constrained_xargs(),
         },
     }
     d = upstream_completions(body)
     rows = d["choices"][0]["logprobs"]["top_logprobs"]
     out = []
-    for q, sl in zip(schema["questions"], slots):
+    for _, sl in zip(schema["questions"], slots):
         top = {int(k.split(":")[1]): v for k, v in rows[sl["pos"]].items()}
         out.append(slot_distribution(top, sl["label_ids"]))
     return out, d.get("usage", {})
@@ -677,8 +688,8 @@ def schedule(qs):
 
 
 def chunk_groups(schema, qs):
-    """``qs`` split, in order, into the fewest groups whose answer templates
-    fit ``chunk_rows`` (the canvas by default). A question marked alone gets
+    """`qs` split, in order, into the fewest groups whose answer templates
+    fit `chunk_rows` (the canvas by default). A question marked alone gets
     its own group."""
     limit = schema.get("chunk_rows") or CANVAS_LEN
     groups, group = [], []
@@ -1495,6 +1506,12 @@ def main():
         type=int,
         default=16,
         help="request widths round up to a multiple of this",
+    )
+    p.add_argument(
+        "--no-constrained",
+        dest="constrained",
+        action="store_false",
+        help="read over the whole vocabulary instead of the labels",
     )
     p.add_argument("--host", default="0.0.0.0")
     p.add_argument("--port", type=int, default=8011)

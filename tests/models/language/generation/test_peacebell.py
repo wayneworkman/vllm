@@ -2,15 +2,15 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 """End-to-end check of Peacebell in vLLM against the checkpoint's own code.
 
-The hub repos ship ``modeling_gpt.py`` / ``tokenization_gpt.py`` with a
-KV-cached greedy ``chat_generate`` loop and the authoritative ChatML encoder
-``build_chatml_ids``. That model class is not a ``GenerationMixin``, so the
+The hub repos ship `modeling_gpt.py` / `tokenization_gpt.py` with a
+KV-cached greedy `chat_generate` loop and the authoritative ChatML encoder
+`build_chatml_ids`. That model class is not a `GenerationMixin`, so the
 generic HF-runner comparison cannot be used. This test instead:
 
-* renders chats through ``LLM.chat`` (exercising the native
-  ``PeacebellRenderer``) and asserts the prompt ids equal ``build_chatml_ids``;
+* renders chats through `LLM.chat` (exercising the native
+  `PeacebellRenderer`) and asserts the prompt ids equal `build_chatml_ids`;
 * compares vLLM's greedy continuation and logprobs with the repo's
-  ``chat_generate`` plus teacher-forced logits, via ``check_logprobs_close``.
+  `chat_generate` plus teacher-forced logits, via `check_logprobs_close`.
 """
 
 import pytest
@@ -54,9 +54,9 @@ def _hf_reference(
 ):
     """Greedy continuations and top-k logprobs from the repo's own code.
 
-    Loaded through the repo's dynamic classes rather than ``AutoModel``:
-    vLLM registers its in-tree ``PeacebellConfig`` for ``model_type="gpt"``,
-    which transformers>=5 prefers over remote code, so ``AutoModelForCausalLM``
+    Loaded through the repo's dynamic classes rather than `AutoModel`:
+    vLLM registers its in-tree `PeacebellConfig` for `model_type="gpt"`,
+    which transformers>=5 prefers over remote code, so `AutoModelForCausalLM`
     would trip its config-class consistency check in the same process.
     """
     device = current_platform.device_type

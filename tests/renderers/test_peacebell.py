@@ -3,11 +3,11 @@
 """Tests for the native Peacebell ChatML renderer.
 
 The hermetic tests use a fake tokenizer (one id per character) and pin the
-exact id stream layout: ``<|im_start|>`` + enc(role + "\\n") + enc(content)
-+ ``<|im_end|>`` per message, no newline after ``<|im_end|>``, and the
-``<|im_start|>assistant\\n`` generation prompt. The parity test loads the real
+exact id stream layout: `<|im_start|>` + enc(role + "\\n") + enc(content)
++ `<|im_end|>` per message, no newline after `<|im_end|>`, and the
+`<|im_start|>assistant\\n` generation prompt. The parity test loads the real
 hub tokenizer and checks the renderer against its authoritative
-``build_chatml_ids``, which is what the model was trained on.
+`build_chatml_ids`, which is what the model was trained on.
 """
 
 import pytest
@@ -31,7 +31,7 @@ def should_do_global_cleanup_after_test() -> bool:
 
 
 class FakeSentencePiece:
-    """Stands in for ``SentencePieceProcessor``: one id per character."""
+    """Stands in for `SentencePieceProcessor`: one id per character."""
 
     def encode(self, text: str) -> list[int]:
         return [ord(ch) for ch in text]

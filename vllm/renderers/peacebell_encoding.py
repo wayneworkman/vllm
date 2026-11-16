@@ -3,18 +3,18 @@
 """Peacebell ChatML chat-encoding core.
 
 Pure implementation of the Peacebell chat rendering, kept free of vLLM
-imports: it depends only on the :class:`PeacebellTextTokenizer` protocol and
+imports: it depends only on the `PeacebellTextTokenizer` protocol and
 speaks OpenAI-style message dicts.
 
-Peacebell was trained on ChatML rendered by ``build_chatml_ids`` in the
-checkpoint repo's ``tokenization_gpt.py``. That encoder does NOT build one big
-string and tokenize it. Per message it emits the ``<|im_start|>`` id, then
-``encode(role + "\\n")``, then ``encode(content)`` as a *separate* SentencePiece
-call, then the ``<|im_end|>`` id; no newline follows ``<|im_end|>``. Because the
-SentencePiece model adds a dummy ``▁`` prefix to every ``encode`` call, a Jinja
+Peacebell was trained on ChatML rendered by `build_chatml_ids` in the
+checkpoint repo's `tokenization_gpt.py`. That encoder does NOT build one big
+string and tokenize it. Per message it emits the `<|im_start|>` id, then
+`encode(role + "\\n")`, then `encode(content)` as a *separate* SentencePiece
+call, then the `<|im_end|>` id; no newline follows `<|im_end|>`. Because the
+SentencePiece model adds a dummy `▁` prefix to every `encode` call, a Jinja
 chat template applied to the joined text would tokenize the role/content
-boundary differently and would also turn the literal ``<|im_start|>`` into
-``▁`` + ``<|im_start|>``. This module reproduces the training-time id stream.
+boundary differently and would also turn the literal `<|im_start|>` into
+`▁` + `<|im_start|>`. This module reproduces the training-time id stream.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ class PeacebellTextTokenizer(Protocol):
     def im_end_id(self) -> int: ...
 
     def encode_text(self, text: str) -> list[int]:
-        """Raw SentencePiece encoding of ``text`` with no special tokens."""
+        """Raw SentencePiece encoding of `text` with no special tokens."""
         ...
 
 
@@ -69,15 +69,15 @@ def render_peacebell_messages(
 ) -> list[int]:
     """Render OpenAI-style chat messages to Peacebell prompt token ids.
 
-    Mirrors ``GPTTokenizer.build_chatml_ids`` from the checkpoint repo exactly.
+    Mirrors `GPTTokenizer.build_chatml_ids` from the checkpoint repo exactly.
 
     Args:
-        messages: ``{"role": str, "content": str | text parts}`` dicts.
+        messages: `{"role": str, "content": str | text parts}` dicts.
         tokenizer: Provides the ChatML control ids and raw text encoding.
-        add_generation_prompt: Append ``<|im_start|>assistant\\n`` so the
+        add_generation_prompt: Append `<|im_start|>assistant\\n` so the
             model continues as the assistant.
         continue_final_message: Leave the final message open (no
-            ``<|im_end|>``, no generation prompt) so the model continues it.
+            `<|im_end|>`, no generation prompt) so the model continues it.
 
     Returns:
         The prompt token ids.
